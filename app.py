@@ -109,7 +109,7 @@ if submit:
                 
                 # Generate content using Gemini 3 Flash
                 response = client.models.generate_content(
-                    model='gemini-1.5-flash',
+                    model='gemini-2.0-flash',
                     contents=user_prompt,
                     config=genai.types.GenerateContentConfig(
                         system_instruction=system_instruction,
