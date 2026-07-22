@@ -15,9 +15,12 @@ st.caption("Generate tailored pitch emails, co-marketing ideas, and executive on
 # Sidebar for API Key
 with st.sidebar:
     st.header("⚙️ Configuration")
-    api_key = st.text_input("Enter OpenAI API Key", type="password")
-    st.markdown("---")
-    st.markdown("💡 *Need a key? Grab one from your OpenAI platform dashboard.*")
+    # Automatically grabs the key from Streamlit Cloud Secrets
+    if "OPENAI_API_KEY" in st.secrets:
+        api_key = st.secrets["OPENAI_API_KEY"]
+        st.success("✅ OpenAI API Key loaded!")
+    else:
+        api_key = st.text_input("Enter OpenAI API Key", type="password")
 
 # Form Inputs based on your JSON Schema
 with st.form("partner_form"):
