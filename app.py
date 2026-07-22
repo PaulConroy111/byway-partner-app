@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+from google import genai
 
 # Page Config
 st.set_page_config(
@@ -15,17 +15,15 @@ st.caption("Generate tailored pitch emails, co-marketing ideas, and executive on
 # Sidebar for API Key
 with st.sidebar:
     st.header("⚙️ Configuration")
-    # Automatically grabs the key from Streamlit Cloud Secrets
-    if "OPENAI_API_KEY" in st.secrets:
-        api_key = st.secrets["OPENAI_API_KEY"]
-        st.success("✅ OpenAI API Key loaded!")
+    if "GEMINI_API_KEY" in st.secrets:
+        api_key = st.secrets["GEMINI_API_KEY"]
+        st.success("✅ Gemini API Key loaded!")
     else:
-        api_key = st.text_input("Enter OpenAI API Key", type="password")
+        api_key = st.text_input("Enter Gemini API Key", type="password")
 
-# Form Inputs based on your JSON Schema
+# Form Inputs based on JSON Schema
 with st.form("partner_form"):
     
-    # 1. Task Selection
     st.subheader("1. Task Selection")
     output_type = st.selectbox(
         "Select output type*",
@@ -34,7 +32,6 @@ with st.form("partner_form"):
     
     st.markdown("---")
     
-    # 2. Partner Details
     st.subheader("2. Partner Details")
     col1, col2 = st.columns(2)
     with col1:
@@ -60,7 +57,6 @@ with st.form("partner_form"):
     
     st.markdown("---")
     
-    # 3. Commercial & Proposal Context
     st.subheader("3. Commercial & Proposal Context")
     proposed_structure = st.text_input(
         "Proposed commercial structure",
@@ -80,14 +76,11 @@ with st.form("partner_form"):
 # Processing Output
 if submit:
     if not api_key:
-        st.error("Please enter your OpenAI API key in the sidebar to generate results.")
+        st.error("Please enter your Gemini API key in the sidebar or save it in Streamlit secrets.")
     elif not partner_name or not key_value_driver:
         st.warning("Please fill in all required fields (Partner Name & Primary Hook).")
     else:
-        client = OpenAI(api_key=api_key)
-        
-        # System Prompt enforcing Byway context
-        system_prompt = """
+        system_instruction = """
         You are an expert Strategic Partnerships Lead at Byway, the flight-free travel platform. 
         Your tone is warm, professional, mission-driven (sustainable travel made simple), and commercially sharp.
         
@@ -98,7 +91,7 @@ if submit:
         user_prompt = f"""
         Task: Create a **{output_type}** for a prospective partnership.
         
-        **Context Details:**
+        Context Details:
         - Partner Name: {partner_name}
         - Category: {partner_category}
         - Partner Audience: {target_audience if target_audience else 'Not specified'}
@@ -109,20 +102,24 @@ if submit:
         Provide a polished, complete output ready to be shared or sent.
         """
 
-        with st.spinner("Crafting your partnership asset..."):
+        with st.spinner("Crafting your partnership asset with Gemini..."):
             try:
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    temperature=0.7
+                # Initialize Gemini client
+                client = genai.Client(api_key=api_key)
+                
+                # Generate content using Gemini 3 Flash
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=user_prompt,
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        temperature=0.7
+                    )
                 )
                 
                 st.markdown("---")
                 st.subheader(f"📄 Result: {output_type}")
-                st.markdown(response.choices[0].message.content)
+                st.markdown(response.text)
                 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
