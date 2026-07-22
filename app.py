@@ -1,5 +1,5 @@
 import streamlit as st
-from google import genai
+import google.generativeai as genai
 
 # Page Config
 st.set_page_config(
@@ -89,6 +89,8 @@ if submit:
         """
         
         user_prompt = f"""
+        System Role: {system_instruction}
+        
         Task: Create a **{output_type}** for a prospective partnership.
         
         Context Details:
@@ -102,20 +104,13 @@ if submit:
         Provide a polished, complete output ready to be shared or sent.
         """
 
-        with st.spinner("Crafting your partnership asset with Gemini..."):
+        with st.spinner("Crafting your partnership asset..."):
             try:
-                # Initialize Gemini client
-                client = genai.Client(api_key=api_key)
+                # Configure API key
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # Generate content using Gemini 3 Flash
-                response = client.models.generate_content(
-                    model='gemini-2.0-flash',
-                    contents=user_prompt,
-                    config=genai.types.GenerateContentConfig(
-                        system_instruction=system_instruction,
-                        temperature=0.7
-                    )
-                )
+                response = model.generate_content(user_prompt)
                 
                 st.markdown("---")
                 st.subheader(f"📄 Result: {output_type}")
